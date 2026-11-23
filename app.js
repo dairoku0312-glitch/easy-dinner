@@ -63,7 +63,7 @@ const RECIPES = [
       { text: 'お米を炊飯器にセットする' },
       { text: '耐熱皿に野菜→鮭の順にのせ、酒をふる' },
       { text: 'ふんわりラップをしてレンジ600Wで加熱する', timerSec: 360 },
-      { text: 'バターとしょうゆをかけて完成！' },
+      { text: '鮭に火が通っているか確認して、バターとしょうゆをかけて完成！' },
     ],
   },
   {
@@ -143,7 +143,7 @@ const MORE_RECIPES = [
       { text: '大根を薄い半月切りにし、豚肉は一口大に切る' },
       { text: '耐熱皿に大根→豚肉の順に重ね、調味料をかける' },
       { text: 'ラップをしてレンジ600Wで加熱し、混ぜてもう一度加熱する', timerSec: 480 },
-      { text: '少し置いて味をなじませたら完成！' },
+      { text: '豚肉の中心まで火が通っているか確認して完成！' },
     ],
   },
   {
@@ -324,7 +324,7 @@ const PFC_RECIPES = [
       { text: '鶏肉にフォークで穴を開け、調味料をすり込む' },
       { text: '耐熱皿に入れてラップをし、レンジ600Wで加熱する', timerSec: 240 },
       { text: '裏返してもう一度加熱し、そのまま置いて余熱で火を通す', timerSec: 180 },
-      { text: '切って盛って完成！' },
+      { text: '中心が白く火が通っているか確認してから切って完成！' },
     ],
   },
   {
@@ -452,23 +452,32 @@ if (typeof document !== 'undefined') {
       box.appendChild(chip);
     });
   }
+  function isFullMatch(r) {
+    return [...selectedFilters].every((f) => r.main.includes(f));
+  }
+  function missingMains(r) {
+    return r.main.filter((m) => !selectedFilters.has(m));
+  }
   function filteredRecipes() {
     let pool = RECIPES;
     if (selectedCat !== 'all') pool = pool.filter((r) => r.cat === selectedCat);
     if (selectedFilters.size === 0) return pool;
     return pool
-      .map((r) => ({ r, hit: r.main.filter((m) => selectedFilters.has(m)).length }))
+      .map((r) => ({ r, hit: r.main.filter((m) => selectedFilters.has(m)).length, full: isFullMatch(r) }))
       .filter((x) => x.hit > 0)
-      .sort((a, b) => b.hit - a.hit)
+      .sort((a, b) => (b.full - a.full) || (b.hit - a.hit))
       .map((x) => x.r);
   }
   function renderHome() {
     renderCatChips();
     renderChips();
     const targets = filteredRecipes();
-    $('filterNote').textContent = selectedFilters.size === 0
-      ? ''
-      : targets.length + '品が作れます（材料が多く合う順）';
+    if (selectedFilters.size === 0) {
+      $('filterNote').textContent = '';
+    } else {
+      const fullCount = targets.filter((r) => isFullMatch(r)).length;
+      $('filterNote').textContent = '選んだ材料が全部そろう ' + fullCount + '品 ／ 一部で作れる ' + (targets.length - fullCount) + '品';
+    }
     $('clearFiltersBtn').hidden = selectedFilters.size === 0;
     const list = $('menuList');
     list.innerHTML = '';
@@ -477,7 +486,16 @@ if (typeof document !== 'undefined') {
       btn.className = 'menu-card';
       btn.innerHTML = '<span class="name"></span><span class="sub"></span>';
       btn.querySelector('.name').textContent = r.name;
-      btn.querySelector('.sub').textContent = '約' + r.minutes + '分 ・ ' + r.tool + ' ・ 工程' + r.steps.length + 'つ' + (r.pfc ? ' ・ ' + r.pfc : '');
+      let sub = '約' + r.minutes + '分 ・ ' + r.tool + ' ・ 工程' + r.steps.length + 'つ' + (r.pfc ? ' ・ ' + r.pfc : '');
+      if (selectedFilters.size > 0) {
+        if (isFullMatch(r)) {
+          sub += ' ・ 材料そろってる';
+        } else {
+          const miss = missingMains(r);
+          if (miss.length > 0) sub += ' ・ 足りない主な材料：' + miss.join('・');
+        }
+      }
+      btn.querySelector('.sub').textContent = sub;
       btn.addEventListener('click', () => openRecipe(r.id));
       list.appendChild(btn);
     });
@@ -524,9 +542,29 @@ if (typeof document !== 'undefined') {
   // ---- 調理モード ----
   function startCooking(recipeId, step) {
     currentRecipeId = recipeId;
-    saveJSON(COOKING_KEY, { recipeId, step });
+    saveJSON(COOKING_KEY, { recipeId, step, timerLeft: null, timerEndAt: null });
     renderStep();
     show('view-cook');
+  }
+  function startTicking() {
+    stopTimer();
+    $('timerBtn').textContent = 'とめる';
+    timerId = setInterval(() => {
+      const cooking = loadJSON(COOKING_KEY, null);
+      if (!cooking || !cooking.timerEndAt) { stopTimer(); return; }
+      timerLeft = Math.max(0, Math.round((cooking.timerEndAt - Date.now()) / 1000));
+      if (timerLeft <= 0) {
+        timerLeft = 0;
+        cooking.timerLeft = 0;
+        cooking.timerEndAt = null;
+        saveJSON(COOKING_KEY, cooking);
+        stopTimer();
+        $('timerBtn').textContent = 'タイマー開始';
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        alert('タイマー終了！次の手順に進んで大丈夫です');
+      }
+      renderTimer();
+    }, 500);
   }
   function renderStep() {
     const cooking = loadJSON(COOKING_KEY, null);
@@ -542,11 +580,28 @@ if (typeof document !== 'undefined') {
     $('stepLabel').textContent = '手順 ' + (cooking.step + 1) + ' / ' + r.steps.length;
     $('stepText').textContent = s.text;
     $('nextStepBtn').textContent = cooking.step === r.steps.length - 1 ? '完成！' : 'できた！つぎへ';
+    stopTimer();
     if (s.timerSec) {
       $('timerBox').hidden = false;
-      timerLeft = s.timerSec;
+      // 保存された残り時間を復元する（動作中なら終了時刻から逆算）
+      if (cooking.timerEndAt) {
+        timerLeft = Math.max(0, Math.round((cooking.timerEndAt - Date.now()) / 1000));
+      } else if (typeof cooking.timerLeft === 'number') {
+        timerLeft = cooking.timerLeft;
+      } else {
+        timerLeft = s.timerSec;
+      }
       renderTimer();
-      $('timerBtn').textContent = 'タイマー開始';
+      if (cooking.timerEndAt && timerLeft > 0) {
+        startTicking();
+      } else {
+        if (cooking.timerEndAt) {
+          cooking.timerEndAt = null;
+          cooking.timerLeft = 0;
+          saveJSON(COOKING_KEY, cooking);
+        }
+        $('timerBtn').textContent = timerLeft > 0 && timerLeft < s.timerSec ? 'タイマー再開' : 'タイマー開始';
+      }
     } else {
       $('timerBox').hidden = true;
     }
@@ -560,19 +615,29 @@ if (typeof document !== 'undefined') {
     if (timerId) { clearInterval(timerId); timerId = null; }
   }
   function toggleTimer() {
-    if (timerId) { stopTimer(); $('timerBtn').textContent = 'タイマー開始'; return; }
-    $('timerBtn').textContent = 'とめる';
-    timerId = setInterval(() => {
-      timerLeft -= 1;
-      if (timerLeft <= 0) {
-        timerLeft = 0;
-        stopTimer();
-        $('timerBtn').textContent = 'タイマー開始';
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-        alert('タイマー終了！次の手順に進んで大丈夫です');
+    const cooking = loadJSON(COOKING_KEY, null);
+    if (!cooking) return;
+    const r = getRecipe(cooking.recipeId);
+    const s = r.steps[cooking.step];
+    if (timerId) {
+      // 一時停止：残り時間を保存する
+      if (cooking.timerEndAt) {
+        timerLeft = Math.max(0, Math.round((cooking.timerEndAt - Date.now()) / 1000));
       }
+      cooking.timerLeft = timerLeft;
+      cooking.timerEndAt = null;
+      saveJSON(COOKING_KEY, cooking);
+      stopTimer();
+      $('timerBtn').textContent = 'タイマー再開';
       renderTimer();
-    }, 1000);
+      return;
+    }
+    // 開始・再開：終了時刻を保存する（画面を離れても復元できる）
+    if (timerLeft <= 0) timerLeft = s.timerSec;
+    cooking.timerLeft = timerLeft;
+    cooking.timerEndAt = Date.now() + timerLeft * 1000;
+    saveJSON(COOKING_KEY, cooking);
+    startTicking();
   }
 
   // ---- 買い物リスト ----
@@ -623,7 +688,12 @@ if (typeof document !== 'undefined') {
   });
   $('resumeBtn').addEventListener('click', () => {
     const cooking = loadJSON(COOKING_KEY, null);
-    if (cooking) startCooking(cooking.recipeId, cooking.step);
+    if (cooking) {
+      // 保存済みの手順とタイマーをそのまま復元する
+      currentRecipeId = cooking.recipeId;
+      renderStep();
+      show('view-cook');
+    }
   });
   $('addShoppingBtn').addEventListener('click', () => {
     addShoppingItems(getRecipe(currentRecipeId).ingredients);
@@ -642,6 +712,8 @@ if (typeof document !== 'undefined') {
       $('finishBox').hidden = false;
     } else {
       cooking.step += 1;
+      cooking.timerLeft = null;
+      cooking.timerEndAt = null;
       saveJSON(COOKING_KEY, cooking);
       stopTimer();
       renderStep();
@@ -652,6 +724,8 @@ if (typeof document !== 'undefined') {
     if (!cooking) return;
     if (cooking.step > 0) {
       cooking.step -= 1;
+      cooking.timerLeft = null;
+      cooking.timerEndAt = null;
       saveJSON(COOKING_KEY, cooking);
       stopTimer();
       renderStep();

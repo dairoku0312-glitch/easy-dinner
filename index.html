@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>かんたん晩ごはん</title>
 <meta name="theme-color" content="#e07b39">
-<link rel="stylesheet" href="style.css?v=20261123-6">
+<link rel="stylesheet" href="style.css?v=20261123-7">
 </head>
 <body>
 <header class="app-header">
@@ -48,6 +48,7 @@
     <p id="recipeMeta" class="meta"></p>
     <p id="kidNote" class="kid-note" hidden></p>
     <p id="recipePfc" class="pfc-note" hidden></p>
+    <p class="safety-note">加熱時間は目安です。肉や魚は中心まで十分に火を通し、色や肉汁で確認してください。卵の半熟が気になる場合は、長めに加熱してください。</p>
     <h3>材料（2〜3人分）</h3>
     <ul id="ingredientList" class="ingredients"></ul>
     <button id="addShoppingBtn" class="main-btn">材料を買い物リストに入れる</button>
@@ -64,6 +65,7 @@
       <p id="stepLabel" class="step-label"></p>
       <p id="stepText" class="step-text"></p>
       <p class="step-note">中断しても大丈夫。戻ってきたらこの画面のままです。</p>
+      <p class="safety-note">時間は目安だよ。肉は中心まで火が通っているか、色と肉汁で確認してね。</p>
       <div id="timerBox" class="timer-box" hidden>
         <span id="timerDisplay" class="timer-display"></span>
         <button id="timerBtn" class="sub-btn">タイマー開始</button>
@@ -95,6 +97,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261123-6"></script>
+<script src="app.js?v=20261123-7"></script>
 </body>
 </html>
