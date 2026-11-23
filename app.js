@@ -396,8 +396,23 @@ const CATEGORIES = [
   { id: 'pfc', label: 'PFC（筋トレ向け）' },
 ];
 
+const RABBIT_SVG = '<svg viewBox="0 0 120 112" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+  + '<g transform="rotate(-12 38 30)"><ellipse cx="38" cy="30" rx="12" ry="27" fill="#fffdf9" stroke="#e8b48f" stroke-width="3"/><ellipse cx="38" cy="33" rx="6" ry="18" fill="#ffc7d1"/></g>'
+  + '<g transform="rotate(12 82 30)"><ellipse cx="82" cy="30" rx="12" ry="27" fill="#fffdf9" stroke="#e8b48f" stroke-width="3"/><ellipse cx="82" cy="33" rx="6" ry="18" fill="#ffc7d1"/></g>'
+  + '<ellipse cx="60" cy="76" rx="39" ry="31" fill="#fffdf9" stroke="#e8b48f" stroke-width="3"/>'
+  + '<circle cx="46" cy="72" r="4" fill="#4a3428"/><circle cx="74" cy="72" r="4" fill="#4a3428"/>'
+  + '<circle cx="47.5" cy="70.5" r="1.3" fill="#ffffff"/><circle cx="75.5" cy="70.5" r="1.3" fill="#ffffff"/>'
+  + '<ellipse cx="60" cy="80" rx="3.6" ry="2.6" fill="#f28ba8"/>'
+  + '<path d="M60 82.5 Q56 87 52 84.5 M60 82.5 Q64 87 68 84.5" stroke="#4a3428" stroke-width="2" fill="none" stroke-linecap="round"/>'
+  + '<ellipse cx="37" cy="82" rx="7" ry="4" fill="#ffb3c1" opacity="0.75"/>'
+  + '<ellipse cx="83" cy="82" rx="7" ry="4" fill="#ffb3c1" opacity="0.75"/>'
+  + '</svg>';
+
+const CHEERS = ['がんばれー！', 'いい調子！', 'その調子、その調子', 'あと少しだよ', 'もうすぐ完成！'];
+
 if (typeof document !== 'undefined') {
   const $ = (id) => document.getElementById(id);
+  document.querySelectorAll('[data-rabbit]').forEach((el) => { el.innerHTML = RABBIT_SVG; });
   const views = ['view-home', 'view-recipe', 'view-cook', 'view-shopping'];
   let currentRecipeId = null;
   let timerId = null;
@@ -517,6 +532,11 @@ if (typeof document !== 'undefined') {
     if (!cooking) return;
     const r = getRecipe(cooking.recipeId);
     const s = r.steps[cooking.step];
+    $('stepCard').hidden = false;
+    $('finishBox').hidden = true;
+    $('cookNav').hidden = false;
+    $('quitCookBtn').hidden = false;
+    $('cookCheer').textContent = CHEERS[Math.min(cooking.step, CHEERS.length - 1)];
     $('cookRecipeName').textContent = r.name;
     $('stepLabel').textContent = '手順 ' + (cooking.step + 1) + ' / ' + r.steps.length;
     $('stepText').textContent = s.text;
@@ -610,7 +630,11 @@ if (typeof document !== 'undefined') {
     const r = getRecipe(cooking.recipeId);
     if (cooking.step >= r.steps.length - 1) {
       localStorage.removeItem(COOKING_KEY);
-      renderHome();
+      stopTimer();
+      $('stepCard').hidden = true;
+      $('cookNav').hidden = true;
+      $('quitCookBtn').hidden = true;
+      $('finishBox').hidden = false;
     } else {
       cooking.step += 1;
       saveJSON(COOKING_KEY, cooking);
@@ -632,6 +656,7 @@ if (typeof document !== 'undefined') {
     }
   });
   $('quitCookBtn').addEventListener('click', renderHome);
+  $('finishHomeBtn').addEventListener('click', renderHome);
   $('cookBackBtn').addEventListener('click', renderHome);
   $('timerBtn').addEventListener('click', toggleTimer);
   $('addItemBtn').addEventListener('click', () => {

@@ -93,3 +93,20 @@ button { font: inherit; cursor: pointer; border-radius: 12px; }
   font-size: 14px; line-height: 1.6;
 }
 .pfc-note::before { content: "PFC目安（1人分）："; font-weight: 700; }
+/* ---- かわいい寄せ調整 ---- */
+body { font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", system-ui, sans-serif; }
+.header-row { display: flex; align-items: center; gap: 12px; }
+.rabbit { line-height: 0; flex-shrink: 0; }
+.rabbit svg { width: 100%; height: auto; display: block; }
+.rabbit-s { width: 56px; }
+.rabbit-m { width: 84px; margin: 0 auto 4px; }
+.rabbit-l { width: 120px; margin: 0 auto 8px; }
+.cheer { color: #e56b8c; font-weight: 700; font-size: 15px; margin: 2px 0 6px; }
+.gacha-btn { border-radius: 999px; box-shadow: 0 3px 0 #c96428; }
+.main-btn { border-radius: 999px; }
+.main-btn.accent { box-shadow: 0 3px 0 #c96428; }
+.menu-card { border-radius: 18px; }
+.step-card { border-radius: 24px; border-width: 2px; }
+.chip { border-radius: 999px; }
+.resume-box { border-radius: 16px; }
+.shopping-list li { border-radius: 16px; }
