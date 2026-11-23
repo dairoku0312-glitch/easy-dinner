@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>かんたん晩ごはん</title>
 <meta name="theme-color" content="#e07b39">
-<link rel="stylesheet" href="style.css?v=20261123-3">
+<link rel="stylesheet" href="style.css?v=20261123-4">
 </head>
 <body>
 <header class="app-header">
@@ -20,6 +20,10 @@
     <div id="resumeBox" class="resume-box" hidden>
       <span id="resumeText"></span>
       <button id="resumeBtn">つづきから作る</button>
+    </div>
+    <div class="search-box">
+      <p class="search-title">カテゴリ</p>
+      <div id="catChips" class="chips"></div>
     </div>
     <div class="search-box">
       <p class="search-title">冷蔵庫の材料から探す</p>
@@ -37,6 +41,7 @@
     <h2 id="recipeName"></h2>
     <p id="recipeMeta" class="meta"></p>
     <p id="kidNote" class="kid-note" hidden></p>
+    <p id="recipePfc" class="pfc-note" hidden></p>
     <h3>材料（2〜3人分）</h3>
     <ul id="ingredientList" class="ingredients"></ul>
     <button id="addShoppingBtn" class="main-btn">材料を買い物リストに入れる</button>
@@ -76,6 +81,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261123-3"></script>
+<script src="app.js?v=20261123-4"></script>
 </body>
 </html>

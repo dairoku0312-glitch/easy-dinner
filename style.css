@@ -88,3 +88,8 @@ button { font: inherit; cursor: pointer; border-radius: 12px; }
   font-size: 14px; line-height: 1.6;
 }
 .kid-note::before { content: "子ども取り分け："; font-weight: 700; }
+.pfc-note {
+  background: #e3f2e1; border-radius: 12px; padding: 12px;
+  font-size: 14px; line-height: 1.6;
+}
+.pfc-note::before { content: "PFC目安（1人分）："; font-weight: 700; }

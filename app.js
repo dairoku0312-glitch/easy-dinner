@@ -239,6 +239,163 @@ RECIPES.forEach((r) => {
 // 材料フィルター候補
 const INGREDIENT_FILTERS = ['豚肉', '鶏肉', 'ひき肉', '卵', '豆腐', '鮭', 'さば缶', 'ツナ缶', 'ウインナー', 'ごはん', 'うどん', '麺', '玉ねぎ', 'カット野菜', '大根', '冷凍野菜'];
 
+// ---- カテゴリ追加：子ども向け6品 ----
+const KID_RECIPES = [
+  {
+    id: 'shirasu-chahan', name: 'しらす卵チャーハン', minutes: 10, tool: 'フライパン1つ', cat: 'kids',
+    main: ['ごはん', '卵'],
+    kidNote: 'そのまま子ども向けの薄味です。しらすの塩気だけで十分です。',
+    ingredients: ['ごはん 2合分', 'しらす 50g', '卵 2個', '冷凍ねぎ ひとつかみ', 'ごま油 小さじ1'],
+    steps: [
+      { text: '熱したフライパンにごま油と溶き卵、すぐごはんを入れて炒める', timerSec: 180 },
+      { text: 'しらすとねぎを入れて炒める', timerSec: 120 },
+      { text: '小さく盛って完成！（子ども分は短くほぐして）' },
+    ],
+  },
+  {
+    id: 'tofu-tsukune', name: '豆腐つくね', minutes: 15, tool: 'フライパン1つ', cat: 'kids',
+    main: ['ひき肉', '豆腐'],
+    kidNote: 'そのまま子ども向けです。タレなしでも食べられます。',
+    ingredients: ['鶏ひき肉 200g', '木綿豆腐 半丁', '片栗粉 大さじ2', 'しょうゆ 小さじ1'],
+    steps: [
+      { text: '豆腐の水気を軽く切る' },
+      { text: '材料を全部混ぜて小さく丸める' },
+      { text: 'フライパンで両面を焼く', timerSec: 360 },
+      { text: 'お皿に盛って完成！' },
+    ],
+  },
+  {
+    id: 'kabocha-soboro', name: 'かぼちゃのそぼろ煮（レンジ）', minutes: 12, tool: '電子レンジ', cat: 'kids',
+    main: ['ひき肉', '冷凍野菜'],
+    kidNote: 'そのまま子ども向けの甘い味付けです。かぼちゃは小さく切ってください。',
+    ingredients: ['冷凍かぼちゃ 300g', '鶏ひき肉 100g', 'しょうゆ 小さじ2', '砂糖 小さじ2', '水 大さじ3'],
+    steps: [
+      { text: '耐熱皿に材料を全部入れて混ぜる' },
+      { text: 'ラップをしてレンジ600Wで加熱する', timerSec: 300 },
+      { text: '混ぜてもう一度加熱する', timerSec: 180 },
+      { text: 'お皿に盛って完成！' },
+    ],
+  },
+  {
+    id: 'mini-hamburg', name: 'ミニハンバーグ', minutes: 15, tool: 'フライパン1つ', cat: 'kids',
+    main: ['ひき肉', '豆腐', '玉ねぎ'],
+    kidNote: 'そのまま子ども向けです。ソースなしでも豆腐のうま味で食べられます。',
+    ingredients: ['合いびき肉 250g', '木綿豆腐 半丁', '玉ねぎ 半分（みじん切り）', 'パン粉 大さじ3', '塩 少々'],
+    steps: [
+      { text: '材料を全部混ぜて小さく丸める' },
+      { text: 'フライパンで片面を焼く', timerSec: 240 },
+      { text: '裏返してふたをして蒸し焼きにする', timerSec: 300 },
+      { text: 'お皿に盛って完成！' },
+    ],
+  },
+  {
+    id: 'tamago-udon', name: 'たまごうどん', minutes: 8, tool: '鍋1つ', cat: 'kids',
+    main: ['うどん', '卵'],
+    kidNote: 'そのまま子ども向けです。うどんは短く切ってあげてください。',
+    ingredients: ['冷凍うどん 2玉', '卵 2個', '水 600ml', 'めんつゆ（3倍濃縮）大さじ3', '冷凍ねぎ ひとつかみ'],
+    steps: [
+      { text: '鍋に水とめんつゆを入れて沸かす' },
+      { text: '冷凍うどんを入れて煮る', timerSec: 180 },
+      { text: '溶き卵とねぎを入れて完成！' },
+    ],
+  },
+  {
+    id: 'sake-onigiri', name: '鮭おにぎり＆味噌汁セット', minutes: 10, tool: '鍋1つ', cat: 'kids',
+    main: ['ごはん', '鮭'],
+    kidNote: 'そのまま子ども向けです。鮭の骨は大人が取り除いてください。',
+    ingredients: ['ごはん 2合分', '鮭フレーク 適量', '乾燥わかめ ひとつかみ', '味噌 大さじ2', '水 600ml'],
+    steps: [
+      { text: 'ごはんに鮭フレークを混ぜておにぎりを作る' },
+      { text: '鍋にお湯を沸かしてわかめを入れる', timerSec: 120 },
+      { text: '火を止めて味噌を溶いて完成！' },
+    ],
+  },
+];
+RECIPES.push(...KID_RECIPES);
+
+// ---- カテゴリ追加：PFCを考えた6品（数値は1人分の目安） ----
+const PFC_RECIPES = [
+  {
+    id: 'salad-chicken', name: 'サラダチキン（レンジ）', minutes: 12, tool: '電子レンジ', cat: 'pfc',
+    main: ['鶏肉'], pfc: 'P38g / F3g / C2g',
+    kidNote: '塩分控えめにすれば子どもも食べられます。小さく裂いてあげてください。',
+    ingredients: ['鶏むね肉（皮なし）1枚', '酒 大さじ1', '塩 小さじ半分', '砂糖 小さじ半分'],
+    steps: [
+      { text: '鶏肉にフォークで穴を開け、調味料をすり込む' },
+      { text: '耐熱皿に入れてラップをし、レンジ600Wで加熱する', timerSec: 240 },
+      { text: '裏返してもう一度加熱し、そのまま置いて余熱で火を通す', timerSec: 180 },
+      { text: '切って盛って完成！' },
+    ],
+  },
+  {
+    id: 'hire-shogayaki', name: '豚ヒレ生姜焼き', minutes: 12, tool: 'フライパン1つ', cat: 'pfc',
+    main: ['豚肉', '玉ねぎ'], pfc: 'P30g / F6g / C10g',
+    kidNote: '味付け前に取り分けると子どもの薄味分になります。',
+    ingredients: ['豚ヒレ肉 300g', '玉ねぎ 1個', 'しょうがチューブ 3cm', 'しょうゆ 大さじ2', 'みりん 大さじ1'],
+    steps: [
+      { text: '豚ヒレを薄切りにし、玉ねぎは薄切りにする' },
+      { text: 'フライパンで豚肉と玉ねぎを炒める', timerSec: 300 },
+      { text: '調味料を入れて絡めて完成！', timerSec: 120 },
+    ],
+  },
+  {
+    id: 'mune-oyakodon', name: '鶏むね親子丼（高たんぱく）', minutes: 15, tool: 'フライパン1つ', cat: 'pfc',
+    main: ['鶏肉', '卵', '玉ねぎ'], pfc: 'P35g / F9g / C70g（ごはん込み）',
+    kidNote: '卵を入れる前に取り分けると子どもの薄味分になります。',
+    ingredients: ['鶏むね肉 1枚', '玉ねぎ 1個', '卵 3個', 'めんつゆ（3倍濃縮）大さじ4', '水 150ml', 'ごはん 人数分'],
+    steps: [
+      { text: '鶏むねを薄いそぎ切りにし、玉ねぎは薄切りにする' },
+      { text: 'フライパンに水とめんつゆを入れて沸かす' },
+      { text: '鶏肉と玉ねぎを入れて煮る', timerSec: 300 },
+      { text: '溶き卵を回し入れてふたをして待つ', timerSec: 120 },
+      { text: 'ごはんにのせて完成！' },
+    ],
+  },
+  {
+    id: 'ebi-broccoli', name: 'エビとブロッコリーの炒め物', minutes: 10, tool: 'フライパン1つ', cat: 'pfc',
+    main: ['冷凍野菜'], pfc: 'P24g / F8g / C8g',
+    kidNote: 'エビは小さく切れば子どもも食べられます。味付け前に取り分けてください。',
+    ingredients: ['冷凍むきエビ 200g', '冷凍ブロッコリー 1袋', 'にんにくチューブ 2cm', '鶏ガラスープの素 小さじ2', '油 小さじ2'],
+    steps: [
+      { text: 'フライパンに油とにんにくを入れて熱する' },
+      { text: 'エビとブロッコリーを入れて炒める', timerSec: 300 },
+      { text: '鶏ガラスープの素で味付けして完成！' },
+    ],
+  },
+  {
+    id: 'tuna-omelette', name: 'ツナオムレツ', minutes: 8, tool: 'フライパン1つ', cat: 'pfc',
+    main: ['ツナ缶', '卵'], pfc: 'P26g / F14g / C3g',
+    kidNote: 'そのまま子どもも食べられます。ケチャップは大人の分だけに。',
+    ingredients: ['卵 3個', 'ツナ缶（水煮）1缶', '冷凍ねぎ ひとつかみ', '塩こしょう 少々'],
+    steps: [
+      { text: '卵を溶いて、ツナとねぎを混ぜる' },
+      { text: 'フライパンで焼いて半熟で巻く', timerSec: 180 },
+      { text: 'お皿に盛って完成！' },
+    ],
+  },
+  {
+    id: 'tofu-soboro-an', name: '豆腐の鶏そぼろあんかけ', minutes: 12, tool: 'フライパン1つ', cat: 'pfc',
+    main: ['豆腐', 'ひき肉'], pfc: 'P24g / F10g / C12g',
+    kidNote: 'あんを薄味にすれば子どもも一緒に食べられます。',
+    ingredients: ['絹豆腐 1丁', '鶏ひき肉 150g', 'しょうゆ 大さじ1.5', 'みりん 大さじ1', '片栗粉 小さじ2', '水 150ml'],
+    steps: [
+      { text: 'フライパンでひき肉を炒める', timerSec: 180 },
+      { text: '水と調味料を入れて沸かす' },
+      { text: '豆腐を大きく崩し入れて温める', timerSec: 180 },
+      { text: '水溶き片栗粉でとろみをつけて完成！' },
+    ],
+  },
+];
+RECIPES.push(...PFC_RECIPES);
+RECIPES.forEach((r) => { if (!r.cat) r.cat = 'normal'; });
+
+const CATEGORIES = [
+  { id: 'all', label: '全部' },
+  { id: 'normal', label: 'ふつう' },
+  { id: 'kids', label: '子ども向け' },
+  { id: 'pfc', label: 'PFC（筋トレ向け）' },
+];
+
 if (typeof document !== 'undefined') {
   const $ = (id) => document.getElementById(id);
   const views = ['view-home', 'view-recipe', 'view-cook', 'view-shopping'];
@@ -253,6 +410,18 @@ if (typeof document !== 'undefined') {
 
   // ---- ホーム ----
   const selectedFilters = new Set();
+  let selectedCat = 'all';
+  function renderCatChips() {
+    const box = $('catChips');
+    box.innerHTML = '';
+    CATEGORIES.forEach((c) => {
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (selectedCat === c.id ? ' on' : '');
+      chip.textContent = c.label;
+      chip.addEventListener('click', () => { selectedCat = c.id; renderHome(); });
+      box.appendChild(chip);
+    });
+  }
   function renderChips() {
     const box = $('filterChips');
     box.innerHTML = '';
@@ -269,14 +438,17 @@ if (typeof document !== 'undefined') {
     });
   }
   function filteredRecipes() {
-    if (selectedFilters.size === 0) return RECIPES;
-    return RECIPES
+    let pool = RECIPES;
+    if (selectedCat !== 'all') pool = pool.filter((r) => r.cat === selectedCat);
+    if (selectedFilters.size === 0) return pool;
+    return pool
       .map((r) => ({ r, hit: r.main.filter((m) => selectedFilters.has(m)).length }))
       .filter((x) => x.hit > 0)
       .sort((a, b) => b.hit - a.hit)
       .map((x) => x.r);
   }
   function renderHome() {
+    renderCatChips();
     renderChips();
     const targets = filteredRecipes();
     $('filterNote').textContent = selectedFilters.size === 0
@@ -289,7 +461,7 @@ if (typeof document !== 'undefined') {
       btn.className = 'menu-card';
       btn.innerHTML = '<span class="name"></span><span class="sub"></span>';
       btn.querySelector('.name').textContent = r.name;
-      btn.querySelector('.sub').textContent = '約' + r.minutes + '分 ・ ' + r.tool + ' ・ 工程' + r.steps.length + 'つ';
+      btn.querySelector('.sub').textContent = '約' + r.minutes + '分 ・ ' + r.tool + ' ・ 工程' + r.steps.length + 'つ' + (r.pfc ? ' ・ ' + r.pfc : '');
       btn.addEventListener('click', () => openRecipe(r.id));
       list.appendChild(btn);
     });
@@ -316,6 +488,12 @@ if (typeof document !== 'undefined') {
       $('kidNote').textContent = r.kidNote;
     } else {
       $('kidNote').hidden = true;
+    }
+    if (r.pfc) {
+      $('recipePfc').hidden = false;
+      $('recipePfc').textContent = r.pfc;
+    } else {
+      $('recipePfc').hidden = true;
     }
     const ul = $('ingredientList');
     ul.innerHTML = '';
