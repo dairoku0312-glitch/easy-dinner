@@ -442,14 +442,19 @@ if (typeof document !== 'undefined') {
   });
   $('prevStepBtn').addEventListener('click', () => {
     const cooking = loadJSON(COOKING_KEY, null);
-    if (cooking && cooking.step > 0) {
+    if (!cooking) return;
+    if (cooking.step > 0) {
       cooking.step -= 1;
       saveJSON(COOKING_KEY, cooking);
       stopTimer();
       renderStep();
+    } else {
+      // 最初の手順ではレシピ詳細に戻る
+      openRecipe(cooking.recipeId);
     }
   });
   $('quitCookBtn').addEventListener('click', renderHome);
+  $('cookBackBtn').addEventListener('click', renderHome);
   $('timerBtn').addEventListener('click', toggleTimer);
   $('addItemBtn').addEventListener('click', () => {
     const v = $('newItemInput').value.trim();
