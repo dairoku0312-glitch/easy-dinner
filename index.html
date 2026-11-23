@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>かんたん晩ごはん</title>
+<meta name="theme-color" content="#e07b39">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <h1>かんたん晩ごはん</h1>
+  <p class="tagline">15分くらい・工程すくなめ・中断しても大丈夫</p>
+</header>
+
+<main>
+  <!-- ホーム：メニュー一覧 -->
+  <section id="view-home" class="view">
+    <button id="gachaBtn" class="gacha-btn">今日の晩ご飯をガチャで決める</button>
+    <div id="resumeBox" class="resume-box" hidden>
+      <span id="resumeText"></span>
+      <button id="resumeBtn">つづきから作る</button>
+    </div>
+    <div class="search-box">
+      <p class="search-title">冷蔵庫の材料から探す</p>
+      <div id="filterChips" class="chips"></div>
+      <p id="filterNote" class="meta"></p>
+    </div>
+    <h2>メニュー</h2>
+    <div id="menuList" class="menu-list"></div>
+    <button id="goShoppingBtn" class="sub-btn">買い物リストを見る（<span id="shoppingCount">0</span>）</button>
+  </section>
+
+  <!-- レシピ詳細 -->
+  <section id="view-recipe" class="view" hidden>
+    <button class="back-btn" data-back>← もどる</button>
+    <h2 id="recipeName"></h2>
+    <p id="recipeMeta" class="meta"></p>
+    <p id="kidNote" class="kid-note" hidden></p>
+    <h3>材料（2〜3人分）</h3>
+    <ul id="ingredientList" class="ingredients"></ul>
+    <button id="addShoppingBtn" class="main-btn">材料を買い物リストに入れる</button>
+    <button id="startCookBtn" class="main-btn accent">作りはじめる</button>
+  </section>
+
+  <!-- 調理モード -->
+  <section id="view-cook" class="view" hidden>
+    <p id="cookRecipeName" class="meta"></p>
+    <div class="step-card">
+      <p id="stepLabel" class="step-label"></p>
+      <p id="stepText" class="step-text"></p>
+      <p class="step-note">中断しても大丈夫。戻ってきたらこの画面のままです。</p>
+      <div id="timerBox" class="timer-box" hidden>
+        <span id="timerDisplay" class="timer-display"></span>
+        <button id="timerBtn" class="sub-btn">タイマー開始</button>
+      </div>
+    </div>
+    <div class="cook-nav">
+      <button id="prevStepBtn" class="sub-btn">もどる</button>
+      <button id="nextStepBtn" class="main-btn accent">できた！つぎへ</button>
+    </div>
+    <button id="quitCookBtn" class="text-btn">今日はここまで（あとで続きから）</button>
+  </section>
+
+  <!-- 買い物リスト -->
+  <section id="view-shopping" class="view" hidden>
+    <button class="back-btn" data-back>← もどる</button>
+    <h2>買い物リスト</h2>
+    <ul id="shoppingList" class="shopping-list"></ul>
+    <div class="add-row">
+      <input id="newItemInput" type="text" placeholder="手動で追加（例：牛乳）">
+      <button id="addItemBtn" class="sub-btn">追加</button>
+    </div>
+    <button id="clearCheckedBtn" class="text-btn">買えたものを消す</button>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
