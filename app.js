@@ -469,6 +469,7 @@ if (typeof document !== 'undefined') {
     $('filterNote').textContent = selectedFilters.size === 0
       ? ''
       : targets.length + '品が作れます（材料が多く合う順）';
+    $('clearFiltersBtn').hidden = selectedFilters.size === 0;
     const list = $('menuList');
     list.innerHTML = '';
     targets.forEach((r) => {
@@ -616,6 +617,10 @@ if (typeof document !== 'undefined') {
     openRecipe(r.id);
   });
   $('goShoppingBtn').addEventListener('click', renderShopping);
+  $('clearFiltersBtn').addEventListener('click', () => {
+    selectedFilters.clear();
+    renderHome();
+  });
   $('resumeBtn').addEventListener('click', () => {
     const cooking = loadJSON(COOKING_KEY, null);
     if (cooking) startCooking(cooking.recipeId, cooking.step);
