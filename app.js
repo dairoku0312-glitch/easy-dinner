@@ -103,8 +103,13 @@ function loadJSON(key, fallback) {
 function saveJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
+let RECIPE_RESOLVER = null;
 function getRecipe(id) {
-  return RECIPES.find((r) => r.id === id) || null;
+  if (RECIPE_RESOLVER) {
+    const resolved = RECIPE_RESOLVER(id);
+    if (resolved) return resolved;
+  }
+  return RECIPES.concat(typeof RECIPES2 !== 'undefined' ? RECIPES2 : []).find((r) => r.id === id) || null;
 }
 
 // ---- 追加レシピ8品（合計16品） ----
@@ -382,10 +387,46 @@ if (typeof document !== 'undefined') {
   const $ = (id) => document.getElementById(id);
   document.querySelectorAll('[data-rabbit]').forEach((el) => { el.innerHTML = rabbitSvg(el.getAttribute('data-rabbit') || 'normal'); });
   function setRabbit(el, expr) { if (el) el.innerHTML = rabbitSvg(expr); }
-  const views = ['view-home', 'view-recipe', 'view-cook', 'view-shopping'];
+  const views = ['view-home', 'view-recipe', 'view-cook', 'view-shopping', 'view-week', 'view-edit'];
   let currentRecipeId = null;
   let timerId = null;
   let timerLeft = 0;
+
+  // ---- v2: お気に入り・週間献立・自作レシピ ----
+  const FAV_KEY = 'easy-dinner.favorites.v1';
+  const WEEK_KEY = 'easy-dinner.week.v1';
+  const HISTORY_KEY = 'easy-dinner.history.v1';
+  const USER_RECIPES_KEY = 'easy-dinner.userRecipes.v1';
+  const OVERRIDES_KEY = 'easy-dinner.overrides.v1';
+  const HIDDEN_KEY = 'easy-dinner.hidden.v1';
+  let selectedGenre = 'all';
+  let maxMinutes = 0;
+  let noKnifeOnly = false;
+  let fewDishesOnly = false;
+  let favOnly = false;
+  let currentServings = 3;
+  let editingId = null;
+
+  function builtinAll() {
+    return RECIPES.concat(typeof RECIPES2 !== 'undefined' ? RECIPES2 : []);
+  }
+  function allRecipes() {
+    const overrides = loadJSON(OVERRIDES_KEY, {});
+    const hidden = loadJSON(HIDDEN_KEY, []);
+    const base = builtinAll()
+      .filter((r) => !hidden.includes(r.id))
+      .map((r) => overrides[r.id] || r);
+    return base.concat(loadJSON(USER_RECIPES_KEY, []));
+  }
+  RECIPE_RESOLVER = function (id) {
+    return allRecipes().find((r) => r.id === id) || null;
+  };
+  function favorites() { return loadJSON(FAV_KEY, []); }
+  function isFav(id) { return favorites().includes(id); }
+  function genreLabel(r) {
+    const g = GENRES.find((x) => x.id === genreOf(r));
+    return g ? g.label : '';
+  }
 
   function show(viewId) {
     views.forEach((v) => { $(v).hidden = v !== viewId; });
@@ -428,8 +469,13 @@ if (typeof document !== 'undefined') {
     return r.main.filter((m) => !selectedFilters.has(m));
   }
   function filteredRecipes() {
-    let pool = RECIPES;
+    let pool = allRecipes();
     if (selectedCat !== 'all') pool = pool.filter((r) => r.cat === selectedCat);
+    if (selectedGenre !== 'all') pool = pool.filter((r) => genreOf(r) === selectedGenre);
+    if (maxMinutes > 0) pool = pool.filter((r) => r.minutes <= maxMinutes);
+    if (noKnifeOnly) pool = pool.filter((r) => flagsOf(r).noKnife);
+    if (fewDishesOnly) pool = pool.filter((r) => flagsOf(r).fewDishes);
+    if (favOnly) pool = pool.filter((r) => isFav(r.id));
     if (selectedFilters.size === 0) return pool;
     return pool
       .map((r) => ({ r, hit: r.main.filter((m) => selectedFilters.has(m)).length, full: isFullMatch(r) }))
@@ -437,8 +483,39 @@ if (typeof document !== 'undefined') {
       .sort((a, b) => (b.full - a.full) || (b.hit - a.hit))
       .map((x) => x.r);
   }
+  function renderGenreChips() {
+    const box = $('genreChips');
+    box.innerHTML = '';
+    [{ id: 'all', label: '全部' }].concat(GENRES).forEach((g) => {
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (selectedGenre === g.id ? ' on' : '');
+      chip.textContent = g.label;
+      chip.addEventListener('click', () => { selectedGenre = g.id; renderHome(); });
+      box.appendChild(chip);
+    });
+  }
+  function renderCondChips() {
+    const box = $('condChips');
+    box.innerHTML = '';
+    const defs = [
+      { label: '10分以内', on: maxMinutes === 10, fn: () => { maxMinutes = maxMinutes === 10 ? 0 : 10; } },
+      { label: '15分以内', on: maxMinutes === 15, fn: () => { maxMinutes = maxMinutes === 15 ? 0 : 15; } },
+      { label: '包丁不要', on: noKnifeOnly, fn: () => { noKnifeOnly = !noKnifeOnly; } },
+      { label: '洗い物少なめ', on: fewDishesOnly, fn: () => { fewDishesOnly = !fewDishesOnly; } },
+      { label: '★お気に入り', on: favOnly, fn: () => { favOnly = !favOnly; } },
+    ];
+    defs.forEach((d) => {
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (d.on ? ' on' : '');
+      chip.textContent = d.label;
+      chip.addEventListener('click', () => { d.fn(); renderHome(); });
+      box.appendChild(chip);
+    });
+  }
   function renderHome() {
     renderCatChips();
+    renderGenreChips();
+    renderCondChips();
     renderChips();
     const targets = filteredRecipes();
     if (selectedFilters.size === 0) {
@@ -454,8 +531,8 @@ if (typeof document !== 'undefined') {
       const btn = document.createElement('button');
       btn.className = 'menu-card';
       btn.innerHTML = '<span class="name"></span><span class="sub"></span>';
-      btn.querySelector('.name').textContent = r.name;
-      let sub = '約' + r.minutes + '分 ・ ' + r.tool + ' ・ 工程' + r.steps.length + 'つ' + (r.pfc ? ' ・ ' + r.pfc : '');
+      btn.querySelector('.name').textContent = (isFav(r.id) ? '★ ' : '') + r.name;
+      let sub = '約' + r.minutes + '分 ・ ' + genreLabel(r) + ' ・ ' + r.tool + ' ・ 工程' + r.steps.length + 'つ' + (r.pfc ? ' ・ ' + r.pfc : '');
       if (selectedFilters.size > 0) {
         if (isFullMatch(r)) {
           sub += ' ・ 材料そろってる';
@@ -483,9 +560,16 @@ if (typeof document !== 'undefined') {
   // ---- レシピ詳細 ----
   function openRecipe(id) {
     currentRecipeId = id;
-    const r = getRecipe(id);
+    currentServings = 3;
+    renderRecipeDetail();
+    show('view-recipe');
+  }
+  function renderRecipeDetail() {
+    const r = getRecipe(currentRecipeId);
+    if (!r) { renderHome(); return; }
     $('recipeName').textContent = r.name;
-    $('recipeMeta').textContent = '約' + r.minutes + '分 ・ ' + r.tool + ' ・ 工程' + r.steps.length + 'つ';
+    $('recipeMeta').textContent = '約' + r.minutes + '分 ・ ' + genreLabel(r) + ' ・ ' + r.tool + ' ・ 工程' + r.steps.length + 'つ';
+    $('favBtn').textContent = isFav(r.id) ? '★ お気に入り済み（タップで外す）' : '☆ お気に入りに追加';
     if (r.kidNote) {
       $('kidNote').hidden = false;
       $('kidNote').textContent = r.kidNote;
@@ -498,14 +582,33 @@ if (typeof document !== 'undefined') {
     } else {
       $('recipePfc').hidden = true;
     }
+    if (r.point) {
+      $('recipePoint').hidden = false;
+      $('recipePoint').textContent = '時短ポイント：' + r.point;
+    } else {
+      $('recipePoint').hidden = true;
+    }
+    if (r.keep) {
+      $('recipeKeep').hidden = false;
+      $('recipeKeep').textContent = '作り置き・冷凍：' + r.keep;
+    } else {
+      $('recipeKeep').hidden = true;
+    }
+    $('servingsLabel').textContent = currentServings + '人分';
+    renderIngredients();
+  }
+  function renderIngredients() {
+    const r = getRecipe(currentRecipeId);
+    if (!r) return;
     const ul = $('ingredientList');
     ul.innerHTML = '';
-    r.ingredients.forEach((ing) => {
+    recipeIngs(r).forEach((ing) => {
       const li = document.createElement('li');
-      li.textContent = ing;
+      if (ing.raw) li.textContent = ing.raw;
+      else if (ing.q === null || ing.q === undefined) li.textContent = ing.n + (ing.u ? ' ' + ing.u : '');
+      else li.textContent = ing.n + ' ' + fmtQty(scaleQty(ing.q, ing.u, currentServings), ing.u);
       ul.appendChild(li);
     });
-    show('view-recipe');
   }
 
   // ---- 調理モード ----
@@ -616,34 +719,197 @@ if (typeof document !== 'undefined') {
   // ---- 買い物リスト ----
   function renderShopping() {
     const items = loadJSON(SHOPPING_KEY, []);
-    const ul = $('shoppingList');
-    ul.innerHTML = '';
-    items.forEach((item, idx) => {
-      const li = document.createElement('li');
-      if (item.done) li.className = 'done';
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.checked = !!item.done;
-      cb.addEventListener('change', () => {
-        const cur = loadJSON(SHOPPING_KEY, []);
-        cur[idx].done = cb.checked;
-        saveJSON(SHOPPING_KEY, cur);
-        renderShopping();
+    const box = $('shoppingList');
+    box.innerHTML = '';
+    if (items.length === 0) {
+      box.innerHTML = '<p class="meta">まだ何も入っていません。</p>';
+    }
+    SHOP_GROUPS.forEach((g) => {
+      const inGroup = items
+        .map((item, idx) => ({ item, idx }))
+        .filter((x) => (x.item.group || '手動追加') === g);
+      if (inGroup.length === 0) return;
+      const h = document.createElement('h3');
+      h.className = 'shop-group';
+      h.textContent = g;
+      box.appendChild(h);
+      const ul = document.createElement('ul');
+      ul.className = 'shopping-list';
+      inGroup.forEach(({ item, idx }) => {
+        const li = document.createElement('li');
+        if (item.done) li.className = 'done';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!item.done;
+        cb.addEventListener('change', () => {
+          const cur = loadJSON(SHOPPING_KEY, []);
+          cur[idx].done = cb.checked;
+          saveJSON(SHOPPING_KEY, cur);
+          renderShopping();
+        });
+        const span = document.createElement('span');
+        span.textContent = item.name;
+        li.appendChild(cb);
+        li.appendChild(span);
+        ul.appendChild(li);
       });
-      const span = document.createElement('span');
-      span.textContent = item.name;
-      li.appendChild(cb);
-      li.appendChild(span);
-      ul.appendChild(li);
+      box.appendChild(ul);
     });
     show('view-shopping');
   }
-  function addShoppingItems(names) {
+  function addShoppingEntries(entries) {
     const items = loadJSON(SHOPPING_KEY, []);
-    names.forEach((name) => {
-      if (!items.some((i) => i.name === name)) items.push({ name, done: false });
+    entries.forEach((e) => {
+      if (!items.some((i) => i.name === e.name)) {
+        items.push({ name: e.name, done: false, group: e.group || '手動追加', auto: !!e.auto });
+      }
     });
     saveJSON(SHOPPING_KEY, items);
+  }
+  function addShoppingItems(names) {
+    addShoppingEntries(names.map((name) => ({ name, group: '手動追加' })));
+  }
+
+  // ---- 1週間の献立 ----
+  function generateWeek() {
+    const plan = planWeek(allRecipes());
+    const week = { start: new Date().toISOString().slice(0, 10), days: plan.days, sides: plan.sides };
+    saveJSON(WEEK_KEY, week);
+    const hist = loadJSON(HISTORY_KEY, []);
+    hist.unshift({ date: week.start, days: plan.days.slice() });
+    saveJSON(HISTORY_KEY, hist.slice(0, 12));
+    renderWeek();
+  }
+  function renderWeek() {
+    const week = loadJSON(WEEK_KEY, null);
+    const box = $('weekList');
+    box.innerHTML = '';
+    if (!week || !week.days || week.days.length === 0) {
+      box.innerHTML = '<p class="meta">まだ献立がありません。下のボタンで作ってね。</p>';
+    } else {
+      const start = new Date(week.start + 'T00:00:00');
+      week.days.forEach((id, i) => {
+        const r = getRecipe(id);
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
+        const card = document.createElement('div');
+        card.className = 'week-day';
+        const head = document.createElement('div');
+        head.className = 'day-head';
+        const label = document.createElement('span');
+        label.className = 'day-label';
+        label.textContent = (d.getMonth() + 1) + '/' + d.getDate() + '（' + '日月火水木金土'[d.getDay()] + '）';
+        const change = document.createElement('button');
+        change.className = 'text-btn change-btn';
+        change.textContent = '変更する';
+        change.addEventListener('click', () => {
+          const rep = pickReplacement(allRecipes(), week.days);
+          if (!rep) return;
+          week.days[i] = rep.id;
+          saveJSON(WEEK_KEY, week);
+          renderWeek();
+        });
+        head.appendChild(label);
+        head.appendChild(change);
+        card.appendChild(head);
+        const nameBtn = document.createElement('button');
+        nameBtn.className = 'day-name';
+        nameBtn.textContent = r ? r.name : '（削除されたレシピ）';
+        nameBtn.addEventListener('click', () => { if (r) openRecipe(r.id); });
+        card.appendChild(nameBtn);
+        const side = document.createElement('span');
+        side.className = 'day-side';
+        side.textContent = '副菜・汁物の候補：' + (week.sides[i] || '');
+        card.appendChild(side);
+        box.appendChild(card);
+      });
+    }
+    show('view-week');
+  }
+  function buildShoppingFromWeek() {
+    const week = loadJSON(WEEK_KEY, null);
+    if (!week || !week.days) return;
+    const recipes = week.days.map((id) => getRecipe(id)).filter(Boolean);
+    const entries = aggregateForRecipes(recipes).map((e) => ({ name: e.name, group: e.group, auto: true }));
+    // 前回の自動生成分は入れ替える（手動追加分は残す）
+    const kept = loadJSON(SHOPPING_KEY, []).filter((i) => !i.auto);
+    saveJSON(SHOPPING_KEY, kept);
+    addShoppingEntries(entries);
+    renderShopping();
+  }
+
+  // ---- レシピ追加・編集 ----
+  function openEdit(id) {
+    editingId = id || null;
+    const r = id ? getRecipe(id) : null;
+    $('editTitle').textContent = r ? 'レシピを編集' : 'レシピを追加';
+    $('editName').value = r ? r.name : '';
+    $('editMinutes').value = r ? r.minutes : 15;
+    $('editGenre').value = r ? genreOf(r) : 'niku';
+    $('editTool').value = r ? r.tool : 'フライパン';
+    $('editIngs').value = r ? recipeIngs(r).map((ing) => ing.raw || fmtIng(ing)).join('\n') : '';
+    $('editSteps').value = r ? r.steps.map((s) => s.text).join('\n') : '';
+    $('editKidNote').value = r ? (r.kidNote || '') : '';
+    $('editPoint').value = r ? (r.point || '') : '';
+    $('editKeep').value = r ? (r.keep || '') : '';
+    show('view-edit');
+  }
+  function saveEdit() {
+    const name = $('editName').value.trim();
+    if (!name) { alert('料理名を入れてください'); return; }
+    const ingLines = $('editIngs').value.split('\n').map((s) => s.trim()).filter(Boolean);
+    const stepLines = $('editSteps').value.split('\n').map((s) => s.trim()).filter(Boolean);
+    if (ingLines.length === 0 || stepLines.length === 0) { alert('材料と手順を入れてください'); return; }
+    const base = editingId ? getRecipe(editingId) : null;
+    const recipe = {
+      id: editingId || ('u-' + Date.now()),
+      name,
+      minutes: Math.max(1, parseInt($('editMinutes').value, 10) || 15),
+      cat: base ? (base.cat || 'kids') : 'kids',
+      genre: $('editGenre').value,
+      tool: $('editTool').value.trim() || 'フライパン',
+      main: base ? (base.main || []) : ingLines.slice(0, 2).map((s) => parseIngredient(s).n),
+      ings: ingLines.map(parseIngredient),
+      steps: stepLines.map((t) => ({ text: t })),
+      kidNote: $('editKidNote').value.trim(),
+      point: $('editPoint').value.trim(),
+      keep: $('editKeep').value.trim(),
+      noKnife: base ? !!base.noKnife : false,
+      fewDishes: base ? !!base.fewDishes : false,
+    };
+    if (recipe.kidNote === '') delete recipe.kidNote;
+    if (recipe.point === '') delete recipe.point;
+    if (recipe.keep === '') delete recipe.keep;
+    if (editingId && editingId.indexOf('u-') === 0) {
+      const users = loadJSON(USER_RECIPES_KEY, []);
+      const i = users.findIndex((x) => x.id === editingId);
+      if (i >= 0) users[i] = recipe; else users.push(recipe);
+      saveJSON(USER_RECIPES_KEY, users);
+    } else if (editingId) {
+      const overrides = loadJSON(OVERRIDES_KEY, {});
+      overrides[editingId] = recipe;
+      saveJSON(OVERRIDES_KEY, overrides);
+    } else {
+      const users = loadJSON(USER_RECIPES_KEY, []);
+      users.push(recipe);
+      saveJSON(USER_RECIPES_KEY, users);
+    }
+    currentRecipeId = recipe.id;
+    renderRecipeDetail();
+    show('view-recipe');
+  }
+  function deleteCurrentRecipe() {
+    const r = getRecipe(currentRecipeId);
+    if (!r) return;
+    if (!window.confirm('「' + r.name + '」を削除しますか？')) return;
+    if (r.id.indexOf('u-') === 0) {
+      saveJSON(USER_RECIPES_KEY, loadJSON(USER_RECIPES_KEY, []).filter((x) => x.id !== r.id));
+    } else {
+      const hidden = loadJSON(HIDDEN_KEY, []);
+      if (!hidden.includes(r.id)) hidden.push(r.id);
+      saveJSON(HIDDEN_KEY, hidden);
+    }
+    renderHome();
   }
 
   // ---- イベント ----
@@ -669,8 +935,39 @@ if (typeof document !== 'undefined') {
     }
   });
   $('addShoppingBtn').addEventListener('click', () => {
-    addShoppingItems(getRecipe(currentRecipeId).ingredients);
+    const r = getRecipe(currentRecipeId);
+    if (!r) return;
+    addShoppingEntries(aggregateForRecipes([r]));
     renderShopping();
+  });
+  $('weekBtn').addEventListener('click', renderWeek);
+  $('genWeekBtn').addEventListener('click', generateWeek);
+  $('weekShoppingBtn').addEventListener('click', buildShoppingFromWeek);
+  $('addRecipeBtn').addEventListener('click', () => openEdit(null));
+  $('favBtn').addEventListener('click', () => {
+    const favs = favorites();
+    const i = favs.indexOf(currentRecipeId);
+    if (i >= 0) favs.splice(i, 1);
+    else favs.push(currentRecipeId);
+    saveJSON(FAV_KEY, favs);
+    renderRecipeDetail();
+  });
+  $('servingsMinus').addEventListener('click', () => {
+    currentServings = Math.max(1, currentServings - 1);
+    $('servingsLabel').textContent = currentServings + '人分';
+    renderIngredients();
+  });
+  $('servingsPlus').addEventListener('click', () => {
+    currentServings = Math.min(6, currentServings + 1);
+    $('servingsLabel').textContent = currentServings + '人分';
+    renderIngredients();
+  });
+  $('editRecipeBtn').addEventListener('click', () => openEdit(currentRecipeId));
+  $('deleteRecipeBtn').addEventListener('click', deleteCurrentRecipe);
+  $('saveEditBtn').addEventListener('click', saveEdit);
+  $('cancelEditBtn').addEventListener('click', () => {
+    if (editingId) { renderRecipeDetail(); show('view-recipe'); }
+    else renderHome();
   });
   $('startCookBtn').addEventListener('click', () => startCooking(currentRecipeId, 0));
   $('nextStepBtn').addEventListener('click', () => {
