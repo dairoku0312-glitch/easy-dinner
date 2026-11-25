@@ -334,23 +334,54 @@ const CATEGORIES = [
   { id: 'kids', label: '子ども向け' },
 ];
 
-const RABBIT_SVG = '<svg viewBox="0 0 120 112" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
-  + '<g transform="rotate(-12 38 30)"><ellipse cx="38" cy="30" rx="12" ry="27" fill="#fffdf9" stroke="#e8b48f" stroke-width="3"/><ellipse cx="38" cy="33" rx="6" ry="18" fill="#ffc7d1"/></g>'
-  + '<g transform="rotate(12 82 30)"><ellipse cx="82" cy="30" rx="12" ry="27" fill="#fffdf9" stroke="#e8b48f" stroke-width="3"/><ellipse cx="82" cy="33" rx="6" ry="18" fill="#ffc7d1"/></g>'
-  + '<ellipse cx="60" cy="76" rx="39" ry="31" fill="#fffdf9" stroke="#e8b48f" stroke-width="3"/>'
-  + '<circle cx="46" cy="72" r="4" fill="#4a3428"/><circle cx="74" cy="72" r="4" fill="#4a3428"/>'
-  + '<circle cx="47.5" cy="70.5" r="1.3" fill="#ffffff"/><circle cx="75.5" cy="70.5" r="1.3" fill="#ffffff"/>'
-  + '<ellipse cx="60" cy="80" rx="3.6" ry="2.6" fill="#f28ba8"/>'
-  + '<path d="M60 82.5 Q56 87 52 84.5 M60 82.5 Q64 87 68 84.5" stroke="#4a3428" stroke-width="2" fill="none" stroke-linecap="round"/>'
-  + '<ellipse cx="37" cy="82" rx="7" ry="4" fill="#ffb3c1" opacity="0.75"/>'
-  + '<ellipse cx="83" cy="82" rx="7" ry="4" fill="#ffb3c1" opacity="0.75"/>'
-  + '</svg>';
+function rabbitSvg(expr) {
+  const ears = '<g transform="rotate(-12 38 30)"><ellipse cx="38" cy="30" rx="12" ry="27" fill="#fffdf9" stroke="#e8b48f" stroke-width="3"/><ellipse cx="38" cy="33" rx="6" ry="18" fill="#ffc7d1"/></g>'
+    + '<g transform="rotate(12 82 30)"><ellipse cx="82" cy="30" rx="12" ry="27" fill="#fffdf9" stroke="#e8b48f" stroke-width="3"/><ellipse cx="82" cy="33" rx="6" ry="18" fill="#ffc7d1"/></g>';
+  const head = '<ellipse cx="60" cy="76" rx="39" ry="31" fill="#fffdf9" stroke="#e8b48f" stroke-width="3"/>';
+  const nose = '<ellipse cx="60" cy="80" rx="3.6" ry="2.6" fill="#f28ba8"/>';
+  const blush = '<ellipse cx="37" cy="82" rx="7" ry="4" fill="#ffb3c1" opacity="0.75"/>'
+    + '<ellipse cx="83" cy="82" rx="7" ry="4" fill="#ffb3c1" opacity="0.75"/>';
+  const sparkleL = '<path d="M14 46 L16.5 53.5 L24 56 L16.5 58.5 L14 66 L11.5 58.5 L4 56 L11.5 53.5 Z" fill="#f6bd60"/>';
+  const sparkleR = '<path d="M106 46 L108.5 53.5 L116 56 L108.5 58.5 L106 66 L103.5 58.5 L96 56 L103.5 53.5 Z" fill="#f6bd60"/>';
+  let face;
+  if (expr === 'cheer') {
+    // 応援：にっこり閉じ目＋開いた口＋キラキラ
+    face = '<path d="M38 72 Q46 63 54 72" stroke="#4a3428" stroke-width="3.5" fill="none" stroke-linecap="round"/>'
+      + '<path d="M66 72 Q74 63 82 72" stroke="#4a3428" stroke-width="3.5" fill="none" stroke-linecap="round"/>'
+      + '<path d="M51 84 Q60 95 69 84 Q60 88.5 51 84 Z" fill="#8a4b3a"/>'
+      + sparkleL + sparkleR;
+  } else if (expr === 'wait') {
+    // 待ってる：穏やかに閉じた目＋小さな「…」の吹き出し
+    face = '<path d="M38 70 Q46 75.5 54 70" stroke="#4a3428" stroke-width="3.5" fill="none" stroke-linecap="round"/>'
+      + '<path d="M66 70 Q74 75.5 82 70" stroke="#4a3428" stroke-width="3.5" fill="none" stroke-linecap="round"/>'
+      + '<path d="M55 85.5 Q60 88.5 65 85.5" stroke="#4a3428" stroke-width="2" fill="none" stroke-linecap="round"/>'
+      + '<circle cx="103" cy="40" r="9" fill="#ffffff" stroke="#e8b48f" stroke-width="2.5"/>'
+      + '<circle cx="99" cy="40" r="1.5" fill="#b08968"/><circle cx="103" cy="40" r="1.5" fill="#b08968"/><circle cx="107" cy="40" r="1.5" fill="#b08968"/>';
+  } else if (expr === 'done') {
+    // 完成：大喜びの閉じ目＋大きな口＋紙吹雪
+    face = '<path d="M37 71 Q46 61 55 71" stroke="#4a3428" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      + '<path d="M65 71 Q74 61 83 71" stroke="#4a3428" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      + '<path d="M49 83.5 Q60 97 71 83.5 Q60 89 49 83.5 Z" fill="#8a4b3a"/>'
+      + '<ellipse cx="60" cy="90" rx="4.5" ry="2.2" fill="#f28ba8"/>'
+      + sparkleL + sparkleR
+      + '<circle cx="13" cy="82" r="2.6" fill="#f28ba8"/><circle cx="107" cy="82" r="2.6" fill="#7fb5d5"/>'
+      + '<circle cx="20" cy="98" r="2.2" fill="#95d5b2"/><circle cx="100" cy="98" r="2.2" fill="#f6bd60"/>';
+  } else {
+    // 通常：今までの顔
+    face = '<circle cx="46" cy="72" r="4" fill="#4a3428"/><circle cx="74" cy="72" r="4" fill="#4a3428"/>'
+      + '<circle cx="47.5" cy="70.5" r="1.3" fill="#ffffff"/><circle cx="75.5" cy="70.5" r="1.3" fill="#ffffff"/>'
+      + '<path d="M60 82.5 Q56 87 52 84.5 M60 82.5 Q64 87 68 84.5" stroke="#4a3428" stroke-width="2" fill="none" stroke-linecap="round"/>';
+  }
+  return '<svg viewBox="0 0 120 112" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+    + ears + head + face + nose + blush + '</svg>';
+}
 
 const CHEERS = ['がんばれー！', 'いい調子！', 'その調子、その調子', 'あと少しだよ', 'もうすぐ完成！'];
 
 if (typeof document !== 'undefined') {
   const $ = (id) => document.getElementById(id);
-  document.querySelectorAll('[data-rabbit]').forEach((el) => { el.innerHTML = RABBIT_SVG; });
+  document.querySelectorAll('[data-rabbit]').forEach((el) => { el.innerHTML = rabbitSvg(el.getAttribute('data-rabbit') || 'normal'); });
+  function setRabbit(el, expr) { if (el) el.innerHTML = rabbitSvg(expr); }
   const views = ['view-home', 'view-recipe', 'view-cook', 'view-shopping'];
   let currentRecipeId = null;
   let timerId = null;
@@ -486,6 +517,7 @@ if (typeof document !== 'undefined') {
   }
   function startTicking() {
     stopTimer();
+    setRabbit($('cookRabbit'), 'wait');
     $('timerBtn').textContent = 'とめる';
     timerId = setInterval(() => {
       const cooking = loadJSON(COOKING_KEY, null);
@@ -497,6 +529,7 @@ if (typeof document !== 'undefined') {
         cooking.timerEndAt = null;
         saveJSON(COOKING_KEY, cooking);
         stopTimer();
+        setRabbit($('cookRabbit'), 'cheer');
         $('timerBtn').textContent = 'タイマー開始';
         if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         alert('タイマー終了！次の手順に進んで大丈夫です');
@@ -510,6 +543,7 @@ if (typeof document !== 'undefined') {
     const r = getRecipe(cooking.recipeId);
     const s = r.steps[cooking.step];
     $('stepCard').hidden = false;
+    setRabbit($('cookRabbit'), 'cheer');
     $('finishBox').hidden = true;
     $('cookNav').hidden = false;
     $('quitCookBtn').hidden = false;
@@ -566,6 +600,7 @@ if (typeof document !== 'undefined') {
       cooking.timerEndAt = null;
       saveJSON(COOKING_KEY, cooking);
       stopTimer();
+      setRabbit($('cookRabbit'), 'cheer');
       $('timerBtn').textContent = 'タイマー再開';
       renderTimer();
       return;
