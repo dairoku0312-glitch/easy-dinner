@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>かんたん晩ごはん</title>
 <meta name="theme-color" content="#e07b39">
-<link rel="stylesheet" href="style.css?v=20261123-8">
+<link rel="stylesheet" href="style.css?v=20261125-1">
 </head>
 <body>
 <header class="app-header">
   <div class="header-row">
-    <div data-rabbit class="rabbit rabbit-s"></div>
+    <div data-rabbit="normal" class="rabbit rabbit-s"></div>
     <div>
       <h1>かんたん晩ごはん</h1>
       <p class="tagline">15分くらい・工程すくなめ・中断しても大丈夫</p>
@@ -60,7 +60,7 @@
     <button id="cookBackBtn" class="back-btn">← ホームに戻る（途中でもOK）</button>
     <p id="cookRecipeName" class="meta"></p>
     <div id="stepCard" class="step-card">
-      <div data-rabbit class="rabbit rabbit-m"></div>
+      <div id="cookRabbit" data-rabbit="cheer" class="rabbit rabbit-m"></div>
       <p id="cookCheer" class="cheer"></p>
       <p id="stepLabel" class="step-label"></p>
       <p id="stepText" class="step-text"></p>
@@ -72,7 +72,7 @@
       </div>
     </div>
     <div id="finishBox" class="step-card" hidden>
-      <div data-rabbit class="rabbit rabbit-l"></div>
+      <div data-rabbit="done" class="rabbit rabbit-l"></div>
       <p class="step-text">完成！おつかれさま</p>
       <p class="step-note">今日も家族のためにありがとう。ゆっくり食べてね。</p>
       <button id="finishHomeBtn" class="main-btn accent">ホームに戻る</button>
@@ -97,6 +97,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261123-8"></script>
+<script src="app.js?v=20261125-1"></script>
 </body>
 </html>
