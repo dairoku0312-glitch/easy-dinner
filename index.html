@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>かんたん晩ごはん</title>
 <meta name="theme-color" content="#e07b39">
-<link rel="stylesheet" href="style.css?v=20261125-1">
+<link rel="stylesheet" href="style.css?v=20261125-2">
 </head>
 <body>
 <header class="app-header">
@@ -22,6 +22,7 @@
   <!-- ホーム：メニュー一覧 -->
   <section id="view-home" class="view">
     <button id="gachaBtn" class="gacha-btn">今日の晩ご飯をガチャで決める</button>
+    <button id="weekBtn" class="sub-btn wide-btn">📅 1週間の献立を見る・作る</button>
     <div id="resumeBox" class="resume-box" hidden>
       <span id="resumeText"></span>
       <button id="resumeBtn">つづきから作る</button>
@@ -31,6 +32,14 @@
       <div id="catChips" class="chips"></div>
     </div>
     <div class="search-box">
+      <p class="search-title">ジャンル</p>
+      <div id="genreChips" class="chips"></div>
+    </div>
+    <div class="search-box">
+      <p class="search-title">条件で絞る</p>
+      <div id="condChips" class="chips"></div>
+    </div>
+    <div class="search-box">
       <p class="search-title">冷蔵庫の材料から探す</p>
       <div id="filterChips" class="chips"></div>
       <p id="filterNote" class="meta"></p>
@@ -38,7 +47,8 @@
     </div>
     <h2>メニュー</h2>
     <div id="menuList" class="menu-list"></div>
-    <button id="goShoppingBtn" class="sub-btn">買い物リストを見る（<span id="shoppingCount">0</span>）</button>
+    <button id="addRecipeBtn" class="sub-btn wide-btn">＋ レシピを追加する</button>
+    <button id="goShoppingBtn" class="sub-btn wide-btn">買い物リストを見る（<span id="shoppingCount">0</span>）</button>
   </section>
 
   <!-- レシピ詳細 -->
@@ -46,13 +56,60 @@
     <button class="back-btn" data-back>← もどる</button>
     <h2 id="recipeName"></h2>
     <p id="recipeMeta" class="meta"></p>
+    <button id="favBtn" class="sub-btn">☆ お気に入りに追加</button>
     <p id="kidNote" class="kid-note" hidden></p>
     <p id="recipePfc" class="pfc-note" hidden></p>
+    <p id="recipePoint" class="point-note" hidden></p>
+    <p id="recipeKeep" class="keep-note" hidden></p>
     <p class="safety-note">加熱時間は目安です。肉や魚は中心まで十分に火を通し、色や肉汁で確認してください。卵の半熟が気になる場合は、長めに加熱してください。</p>
-    <h3>材料（2〜3人分）</h3>
+    <h3>材料</h3>
+    <div class="servings-row">
+      <span>分量：</span>
+      <button id="servingsMinus" class="stepper-btn">−</button>
+      <span id="servingsLabel">3人分</span>
+      <button id="servingsPlus" class="stepper-btn">＋</button>
+    </div>
     <ul id="ingredientList" class="ingredients"></ul>
     <button id="addShoppingBtn" class="main-btn">材料を買い物リストに入れる</button>
     <button id="startCookBtn" class="main-btn accent">作りはじめる</button>
+    <div class="edit-row">
+      <button id="editRecipeBtn" class="text-btn">このレシピを編集</button>
+      <button id="deleteRecipeBtn" class="text-btn danger">このレシピを削除</button>
+    </div>
+  </section>
+
+  <!-- 1週間の献立 -->
+  <section id="view-week" class="view" hidden>
+    <button class="back-btn" data-back>← もどる</button>
+    <h2>1週間の献立</h2>
+    <p class="meta">同じ料理は重ならないように、食材を使い回せる組み合わせで提案します。</p>
+    <div id="weekList"></div>
+    <button id="genWeekBtn" class="main-btn accent">1週間の献立を作る（作り直す）</button>
+    <button id="weekShoppingBtn" class="main-btn">この献立の買い物リストを作る</button>
+  </section>
+
+  <!-- レシピ追加・編集 -->
+  <section id="view-edit" class="view" hidden>
+    <h2 id="editTitle">レシピを追加</h2>
+    <label class="form-label">料理名<input id="editName" type="text" placeholder="例：豚肉のしょうが焼き"></label>
+    <label class="form-label">調理時間（分）<input id="editMinutes" type="number" min="1" max="120" value="15"></label>
+    <label class="form-label">ジャンル
+      <select id="editGenre">
+        <option value="don">丼・ご飯</option>
+        <option value="niku">肉・豆腐のおかず</option>
+        <option value="sakana">魚のおかず</option>
+        <option value="men">麺</option>
+        <option value="nabe">鍋・スープ</option>
+      </select>
+    </label>
+    <label class="form-label">使う道具<input id="editTool" type="text" placeholder="例：フライパン"></label>
+    <label class="form-label">材料（1行に1つ。「名前 分量」の形で）<textarea id="editIngs" rows="7" placeholder="鶏もも肉 200g&#10;玉ねぎ 1/2個&#10;しょうゆ 大さじ2"></textarea></label>
+    <label class="form-label">手順（1行に1つ）<textarea id="editSteps" rows="6" placeholder="材料を切る&#10;フライパンで焼く"></textarea></label>
+    <label class="form-label">子供向けの注意（任意）<textarea id="editKidNote" rows="2"></textarea></label>
+    <label class="form-label">時短ポイント（任意）<input id="editPoint" type="text"></label>
+    <label class="form-label">作り置き・冷凍（任意）<input id="editKeep" type="text"></label>
+    <button id="saveEditBtn" class="main-btn accent">保存する</button>
+    <button id="cancelEditBtn" class="text-btn">キャンセル</button>
   </section>
 
   <!-- 調理モード -->
@@ -88,7 +145,7 @@
   <section id="view-shopping" class="view" hidden>
     <button class="back-btn" data-back>← もどる</button>
     <h2>買い物リスト</h2>
-    <ul id="shoppingList" class="shopping-list"></ul>
+    <div id="shoppingList"></div>
     <div class="add-row">
       <input id="newItemInput" type="text" placeholder="手動で追加（例：牛乳）">
       <button id="addItemBtn" class="sub-btn">追加</button>
@@ -97,6 +154,7 @@
   </section>
 </main>
 
-<script src="app.js?v=20261125-1"></script>
+<script src="recipes2.js?v=20261125-2"></script>
+<script src="app.js?v=20261125-2"></script>
 </body>
 </html>
